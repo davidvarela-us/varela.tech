@@ -4,14 +4,9 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
-const post = {
-    title: 'This is a mockup',
-    date: 'Nov 10, 2021',
-};
-
 ReactDOM.render(
     <React.StrictMode>
-        <App post={post} />
+        <App />
     </React.StrictMode>,
     document.getElementById('root'),
 );
