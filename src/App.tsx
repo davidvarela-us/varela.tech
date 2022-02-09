@@ -205,14 +205,37 @@ const Content: FC = observer(() => {
 
     console.log('rendering content');
 
-    const postElements = posts.map((post) => (
-        <>
+    const postElements = posts.map((post, i) => (
+        <div key={i} style={{ backgroundColor: '#eeeeee' }}>
             <h1>{post.title}</h1>
             <h2>{post.date}</h2>
             {map_children(post.ast)}
-        </>
+        </div>
     ));
     return <>{postElements}</>;
+});
+
+const Index: FC = observer(() => {
+    const { posts } = useContext(RootStoreContext);
+
+    if (posts == null) {
+        return <></>;
+    }
+
+    console.log('rendering index');
+    const titles = posts.map((post, i) => (
+        <li key={i}>
+            <a>
+                <h1 style={{ textTransform: 'uppercase', color: 'red' }}>{post.title}</h1>
+            </a>
+        </li>
+    ));
+    return (
+        <div style={{ backgroundColor: '#cccccc' }}>
+            <h1> Table of Content </h1>
+            <ul style={{ listStyleType: 'none' }}>{titles}</ul>
+        </div>
+    );
 });
 
 const store = new RootStore();
@@ -253,13 +276,14 @@ Just some random words.
 
 * just
 * some
-* random
+* randoms
 * words
 `,
         },
     ]);
     return (
         <RootStoreContext.Provider value={store}>
+            <Index></Index>
             <Content></Content>
         </RootStoreContext.Provider>
     );
