@@ -18,8 +18,7 @@ TODO read on Javascript objects and classes
 TODO automatically lint and test before commit
 */
 
-/*
-FIRST PHASE
+/* FIRST PHASE
 DONE convert markdown to html for a single post
 DONE convert md -> html for  multiple posts
 TODO add simple metadata: title, publish date, visible
@@ -27,6 +26,14 @@ TODO create an index
 TODO read multiple files from disc
 TODO construct a basic layout
 TODO add some simple inline css
+*/
+
+/* CSS
+DONE study CSS Grids: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout/Basic_Concepts_of_Grid_Layout
+DONE find top personal techincal blogs and choose one to copy
+TODO create fixed layout first, then make it responsive
+TODO study CSS layouts in general
+* is it a good idea to mix grids and flex? -> YES
 */
 
 /***********************************************************************
@@ -107,9 +114,7 @@ const CodeBlock: React.FC = ({ children }) => <pre>{children}</pre>;
 
 const Emph: React.FC = ({ children }) => <span>{children}</span>;
 
-const Heading: React.FC = ({ children }) => (
-    <h1 style={{ color: '#333333', textTransform: 'uppercase' }}>{children}</h1>
-);
+const Heading: React.FC = ({ children }) => <h3 style={{ padding: '1rem 0', color: '#333333' }}>{children}</h3>;
 
 type LinkProps = {
     href: string; // TODO
@@ -196,6 +201,20 @@ const Mapping: FC<MappingProps> = ({ node }) => {
  * CONTENT
  ***********************************************************************/
 
+type BlogHeaderProps = {
+    title: string;
+    date: string;
+};
+
+const BlogHeader: FC<BlogHeaderProps> = observer(({ title, date }) => {
+    return (
+        <div style={{ marginTop: '2rem' }}>
+            <h3 style={{ fontSize: '40px', marginBottom: '0px' }}>{title}</h3>
+            <h3 style={{ fontSize: '14px', color: '#555555' }}>{date}</h3>
+        </div>
+    );
+});
+
 const Content: FC = observer(() => {
     const { posts } = useContext(RootStoreContext);
 
@@ -206,13 +225,24 @@ const Content: FC = observer(() => {
     console.log('rendering content');
 
     const postElements = posts.map((post, i) => (
-        <div key={i} style={{ backgroundColor: '#eeeeee' }}>
-            <h1>{post.title}</h1>
-            <h2>{post.date}</h2>
-            {map_children(post.ast)}
+        <div key={i}>
+            <BlogHeader title={post.title} date={post.date}></BlogHeader>
+            <div>{map_children(post.ast)}</div>
         </div>
     ));
-    return <>{postElements}</>;
+    return (
+        <div
+            style={{
+                /* restrict max paragraph length */
+                maxWidth: '786px',
+                display: 'grid',
+                gridTemplateColumns: '1fr',
+                gap: '15px',
+            }}
+        >
+            {postElements}
+        </div>
+    );
 });
 
 const Index: FC = observer(() => {
@@ -225,15 +255,61 @@ const Index: FC = observer(() => {
     console.log('rendering index');
     const titles = posts.map((post, i) => (
         <li key={i}>
-            <a>
-                <h1 style={{ textTransform: 'uppercase', color: 'red' }}>{post.title}</h1>
-            </a>
+            <a>{post.title}</a>
         </li>
     ));
     return (
-        <div style={{ backgroundColor: '#cccccc' }}>
-            <h1> Table of Content </h1>
-            <ul style={{ listStyleType: 'none' }}>{titles}</ul>
+        <div style={{ padding: '1rem' }}>
+            <div style={{ position: 'sticky', top: '4rem', paddingTop: '1rem' }}>
+                <div style={{ fontWeight: 'bold', paddingBottom: '1rem' }}>In this article</div>
+                <ul style={{ padding: 0, listStyleType: 'none' }}>{titles}</ul>
+            </div>
+        </div>
+    );
+});
+
+const Header: FC = observer(() => {
+    return (
+        <div
+            style={{
+                top: 0,
+                position: 'sticky',
+                alignSelf: 'start',
+                padding: '0.5rem 5%',
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '30px',
+                backgroundColor: '#ffffff',
+                borderBottom: 'solid 1px gainsboro',
+            }}
+        >
+            <div
+                style={{
+                    display: 'flex',
+                    justifyContent: 'start',
+                    alignItems: 'center',
+                    fontFamily: 'Cinzel',
+                    fontSize: '2rem',
+                }}
+            >
+                <a className="Branding" href="/">
+                    David E Varela
+                </a>
+            </div>
+            <div
+                style={{
+                    display: 'flex',
+                    justifyContent: 'end',
+                    alignItems: 'center',
+                }}
+            >
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', color: 'gray' }}>
+                    <div style={{ padding: '0 1rem' }}>BLOG</div>
+                    <div style={{ padding: '0 1rem' }}>PORTFOLIO</div>
+                    <div style={{ padding: '0 1rem' }}>ABOUT</div>
+                    <div style={{ padding: '0 1rem' }}>LINKS</div>
+                </div>
+            </div>
         </div>
     );
 });
@@ -241,10 +317,10 @@ const Index: FC = observer(() => {
 const store = new RootStore();
 
 const App: FC = () => {
-    store.loadBlogPosts([
+    let data = [
         {
-            title: 'this is a mockup, foo!!',
-            date: 'Nov 10, 2019',
+            title: 'This Is a Mockup',
+            date: '11/10/2019',
             content: `
 ## This is a poem about fear
 I must not fear.
@@ -255,6 +331,24 @@ I will permit it to pass over me and through me.
 And when it has gone past, I will turn the inner eye to see its path.
 Where the fear has gone there will be nothing. Only I will remain.
 
+I must not fear.
+Fear is the mind-killer.
+Fear is the little-death that brings total obliteration.
+**I will face my fear**.
+I will permit it to pass over me and through me.
+And when it has gone past, I will turn the inner eye to see its path.
+Where the fear has gone there will be nothing. Only I will remain.
+
+I must not fear.
+Fear is the mind-killer.
+Fear is the little-death that brings total obliteration.
+[some other link](foobar.com)
+**I will face my fear**.
+I will permit it to pass over me and through me.
+And when it has gone past, I will turn the inner eye to see its path.
+Where the fear has gone there will be nothing. Only I will remain.
+[some link](google.com)
+
 ## The end
 * I must not fear
 * fear is the mind-killer
@@ -262,13 +356,32 @@ Where the fear has gone there will be nothing. Only I will remain.
 * I will face my fear
 * I will permit it to pass over me and through me
 * When it has gone past I will turn the inner eye to see its path
-* Where the fear has gone there will be nothing
+* Where the fear has gone _there will be nothing_
 * Only I will remain
+
+## This is a poem about fear
+I must not fear.
+Fear is the mind-killer.
+Fear is the little-death that brings total obliteration.
+**I will face my fear**.
+I will permit it to pass over me and through me.
+And when it has gone past, I will turn the inner eye to see its path.
+Where the fear has gone there will be nothing. Only I will remain.
+
+I must not fear.
+Fear is the mind-killer.
+Fear is the little-death that brings total obliteration.
+**I will face my fear**.
+I will permit it to pass over me and through me.
+And when it has gone past, I will turn the inner eye to see its path.
+Where the fear has gone there will be nothing. Only I will remain.
+
+
 `,
         },
         {
-            title: 'this is a second post',
-            date: 'Nov 11,2021',
+            title: 'This is a Second Post',
+            date: '11/11/2021',
             content: `
 ## This is not a poem about fear
 This is a bunch of nothing really.
@@ -280,11 +393,38 @@ Just some random words.
 * words
 `,
         },
-    ]);
+    ];
+    data = [...data, ...data, ...data, ...data];
+    store.loadBlogPosts(data);
     return (
         <RootStoreContext.Provider value={store}>
-            <Index></Index>
-            <Content></Content>
+            <div
+                style={{
+                    display: 'grid',
+                    gridTemplateRows: 'auto auto auto',
+                    rowGap: '10px',
+                    alignItems: 'start',
+                }}
+            >
+                <Header></Header>
+                <div style={{ display: 'grid', justifyItems: 'center' }}>
+                    <div style={{ display: 'grid', gridGap: '30px', gridTemplateColumns: '2fr 1fr', width: '60vw' }}>
+                        <Content></Content>
+                        <Index></Index>
+                    </div>
+                </div>
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'end',
+                        padding: '1rem 5%',
+                        color: '#222222',
+                        backgroundColor: '#eeeeee',
+                    }}
+                >
+                    © 2022 David E Varela. All rights reserved.
+                </div>
+            </div>
         </RootStoreContext.Provider>
     );
 };
