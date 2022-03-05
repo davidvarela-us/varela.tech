@@ -24,8 +24,8 @@ DONE convert md -> html for  multiple posts
 TODO add simple metadata: title, publish date, visible
 TODO create an index
 TODO read multiple files from disc
-TODO construct a basic layout
-TODO add some simple inline css
+DONE construct a basic layout
+DONE add some simple inline css
 */
 
 /* CSS
@@ -33,7 +33,13 @@ DONE study CSS Grids: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_
 DONE find top personal techincal blogs and choose one to copy
 TODO create fixed layout first, then make it responsive
 TODO study CSS layouts in general
+TODO get rid of most CSS magic numbers
 * is it a good idea to mix grids and flex? -> YES
+*/
+
+/* FINAL PHASE
+TODO create a landing page
+TODO create a portfolio
 */
 
 /***********************************************************************
@@ -268,6 +274,20 @@ const Index: FC = observer(() => {
     );
 });
 
+type NavButtonProps = {
+    href: string;
+};
+
+const NavButton: FC<NavButtonProps> = ({ children, href }) => {
+    return (
+        <div style={{ padding: '0 1rem' }}>
+            <a className="NavButton" href={href}>
+                {children}
+            </a>
+        </div>
+    );
+};
+
 const Header: FC = observer(() => {
     return (
         <div
@@ -304,15 +324,70 @@ const Header: FC = observer(() => {
                 }}
             >
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', color: 'gray' }}>
-                    <div style={{ padding: '0 1rem' }}>BLOG</div>
-                    <div style={{ padding: '0 1rem' }}>PORTFOLIO</div>
-                    <div style={{ padding: '0 1rem' }}>ABOUT</div>
-                    <div style={{ padding: '0 1rem' }}>LINKS</div>
+                    <NavButton href="/blog">BLOG</NavButton>
+                    <NavButton href="/portfolio">PORTFOLIO</NavButton>
+                    <NavButton href="/about">ABOUT</NavButton>
                 </div>
             </div>
         </div>
     );
 });
+
+type LinkWidgetProps = {
+    href: string; // TODO
+    title: string;
+    dims?: string;
+};
+
+const LinkWidget: FC<LinkWidgetProps> = ({ children, href, title, dims }) => {
+    return (
+        <div style={{ height: '2rem', width: '2rem', margin: '0 0.25rem' }}>
+            <a href={href} title={title} className="LinkWidget">
+                <svg
+                    data-icon={title}
+                    height="100%"
+                    width="100%"
+                    viewBox={dims ? `0 0 ${dims}` : '0 0 32 32'}
+                    style={{ fill: 'currentcolor' }}
+                >
+                    <title>{title}</title>
+                    {children}
+                </svg>
+            </a>
+        </div>
+    );
+};
+
+const Footer: FC = () => {
+    return (
+        <div
+            style={{
+                display: 'flex',
+                justifyContent: 'end',
+                alignItems: 'center',
+                padding: '1rem 5%',
+                color: '#222222',
+                backgroundColor: '#eeeeee',
+            }}
+        >
+            <div style={{ justifySelf: 'center', display: 'flex', flexDirection: 'row' }}>
+                <LinkWidget href="https://github.com/00vareladavid" title="GitHub">
+                    <path d="M0 18 C0 12 3 10 3 9 C2.5 7 2.5 4 3 3 C6 3 9 5 10 6 C12 5 14 5 16 5 C18 5 20 5 22 6 C23 5 26 3 29 3 C29.5 4 29.5 7 29 9 C29 10 32 12 32 18 C32 25 30 30 16 30 C2 30 0 25 0 18 M3 20 C3 24 4 28 16 28 C28 28 29 24 29 20 C29 16 28 14 16 14 C4 14 3 16 3 20 M8 21 A1.5 2.5 0 0 0 13 21 A1.5 2.5 0 0 0 8 21 M24 21 A1.5 2.5 0 0 0 19 21 A1.5 2.5 0 0 0 24 21 z"></path>
+                </LinkWidget>
+                <LinkWidget href="https://twitter.com/00vareladavid" title="Twitter">
+                    <path d="M2 4 C6 8 10 12 15 11 A6 6 0 0 1 22 4 A6 6 0 0 1 26 6 A8 8 0 0 0 31 4 A8 8 0 0 1 28 8 A8 8 0 0 0 32 7 A8 8 0 0 1 28 11 A18 18 0 0 1 10 30 A18 18 0 0 1 0 27 A12 12 0 0 0 8 24 A8 8 0 0 1 3 20 A8 8 0 0 0 6 19.5 A8 8 0 0 1 0 12 A8 8 0 0 0 3 13 A8 8 0 0 1 2 4"></path>
+                </LinkWidget>
+                <LinkWidget href="https://stackoverflow.com/users/7077117" title="StackOverflow" dims="384 512">
+                    <path d="M290.7 311L95 269.7 86.8 309l195.7 41zm51-87L188.2 95.7l-25.5 30.8 153.5 128.3zm-31.2 39.7L129.2 179l-16.7 36.5L293.7 300zM262 32l-32 24 119.3 160.3 32-24zm20.5 328h-200v39.7h200zm39.7 80H42.7V320h-40v160h359.5V320h-40z"></path>
+                </LinkWidget>
+                <LinkWidget href="https://news.ycombinator.com/user?id=00vareladavid" title="HackerNews" dims="448 512">
+                    <path d="M400 32H48C21.5 32 0 53.5 0 80v352c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48zM21.2 229.2H21c.1-.1.2-.3.3-.4 0 .1 0 .3-.1.4zm218 53.9V384h-31.4V281.3L128 128h37.3c52.5 98.3 49.2 101.2 59.3 125.6 12.3-27 5.8-24.4 60.6-125.6H320l-80.8 155.1z"></path>
+                </LinkWidget>
+            </div>
+            <div>© 2022 David E Varela. All rights reserved.</div>
+        </div>
+    );
+};
 
 const store = new RootStore();
 
@@ -413,20 +488,12 @@ Just some random words.
                         <Index></Index>
                     </div>
                 </div>
-                <div
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'end',
-                        padding: '1rem 5%',
-                        color: '#222222',
-                        backgroundColor: '#eeeeee',
-                    }}
-                >
-                    © 2022 David E Varela. All rights reserved.
-                </div>
+                <Footer></Footer>
             </div>
         </RootStoreContext.Provider>
     );
 };
+
+/* Font Awesome Free 5.15.3 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) */
 
 export default App;

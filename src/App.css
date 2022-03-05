@@ -1,5 +1,5 @@
-a.Branding:hover {
-    color: gainsboro;
+a {
+    color: #3578e5;
 }
 
 a.Branding {
@@ -7,6 +7,23 @@ a.Branding {
     text-decoration: none;
 }
 
-a {
-    color: #3578e5;
+a.Branding:hover {
+    color: gainsboro;
+}
+
+a.LinkWidget {
+    color: gray;
+}
+
+a.LinkWidget:hover {
+    color: gainsboro;
+}
+
+a.NavButton {
+    text-decoration: none;
+    color: gray;
+}
+
+a.NavButton:hover {
+    color: gainsboro;
 }
