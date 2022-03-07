@@ -50,27 +50,37 @@ TODO create a portfolio
 class BlogPostStore {
     title: string;
     date: string;
-    content: string;
-    _ast: commonmark.Node;
+    url: string;
+    _ast: commonmark.Node | null;
 
-    constructor(title: string, date: string, content: string) {
+    constructor(title: string, date: string, url: string) {
         makeAutoObservable(this);
         this.title = title;
         this.date = date;
-        this.content = content;
-        const reader = new commonmark.Parser();
-        this._ast = reader.parse(content);
+        this.url = url;
+        this._ast = null;
     }
 
-    get ast(): commonmark.Node {
+    get ast(): commonmark.Node | null {
         return this._ast;
+    }
+
+    *loadMarkdown() {
+        console.log('loading markdown');
+        // eslint-disable-next-line
+        // @ts-ignore
+        const markdown = yield fetch(this.url);
+        const raw: string = yield markdown.text();
+        const reader = new commonmark.Parser();
+        this._ast = reader.parse(raw);
+        console.log('done loading markdown');
     }
 }
 
 interface BlogPost {
     title: string;
     date: string;
-    content: string;
+    url: string;
 }
 class RootStore {
     _posts: BlogPostStore[] | undefined = undefined;
@@ -84,7 +94,7 @@ class RootStore {
     }
 
     loadBlogPosts(xs: BlogPost[]) {
-        this._posts = xs.map((x) => new BlogPostStore(x.title, x.date, x.content));
+        this._posts = xs.map((x) => new BlogPostStore(x.title, x.date, x.url));
     }
 }
 
@@ -125,18 +135,23 @@ const CodeBlock: React.FC = ({ children }) => (
 
 const Emph: React.FC = ({ children }) => <span>{children}</span>;
 
-const Heading: React.FC = ({ children }) => (
-    <h2
-        style={{
-            fontFamily: 'Hind',
-            marginTop: '1rem',
-            marginBottom: '0.5rem',
-            fontSize: '2rem',
-            fontWeight: '500',
-        }}
-    >
-        {children}
-    </h2>
+type HeadingProps = {
+    id: string | null;
+};
+
+const Heading: React.FC<HeadingProps> = ({ id, children }) => (
+    <a href={id == null ? undefined : `#${id}`} id={id == null ? undefined : id} style={{ color: 'black' }}>
+        <h2
+            style={{
+                fontFamily: 'Hind',
+                fontSize: '2rem',
+                fontWeight: '500',
+                marginTop: '1rem',
+            }}
+        >
+            {children}
+        </h2>
+    </a>
 );
 
 type LinkProps = {
@@ -150,9 +165,11 @@ const ListItem: React.FC = ({ children }) => <li>{children}</li>;
 
 const OrderedList: React.FC = ({ children }) => <ol>{children}</ol>;
 
-const Paragraph: React.FC = ({ children }) => <p>{children}</p>;
+const Paragraph: React.FC = ({ children }) => <p style={{ marginBottom: '1rem' }}>{children}</p>;
 
 const Strong: React.FC = ({ children }) => <span style={{ fontWeight: 'bold' }}>{children}</span>;
+
+const to_id = (title: string): string => title.toLowerCase().split(' ').join('_');
 
 type MappingProps = {
     node: commonmark.Node;
@@ -203,7 +220,11 @@ const Mapping: FC<MappingProps> = ({ node }) => {
             return <Other>{map_children(node)}</Other>;
             break;
         case 'heading':
-            return <Heading>{map_children(node)}</Heading>;
+            return (
+                <Heading id={node?.firstChild?.literal == null ? null : to_id(node.firstChild.literal)}>
+                    {map_children(node)}
+                </Heading>
+            );
             break;
         case 'link':
             return <Link href={node.destination == null ? '' : node.destination}>{map_children(node)}</Link>;
@@ -231,9 +252,9 @@ type BlogHeaderProps = {
 
 const BlogHeader: FC<BlogHeaderProps> = observer(({ title, date }) => {
     return (
-        <div style={{ marginBottom: '2rem' }}>
+        <div>
             <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ fontFamily: 'Hind', fontSize: '3rem', fontWeight: '500' }}>{title}</h3>
+                <h1 style={{ fontFamily: 'Hind', fontSize: '3rem', fontWeight: '500' }}>{title}</h1>
                 <div style={{ fontSize: '1rem', fontWeight: 'normal', color: '#555555' }}>
                     Published on {date} | By <a href="/about">David Varela</a>
                 </div>
@@ -246,18 +267,17 @@ const BlogHeader: FC<BlogHeaderProps> = observer(({ title, date }) => {
 const Content: FC = observer(() => {
     const { posts } = useContext(RootStoreContext);
 
-    if (posts == null) {
+    if (posts == null || posts[0].ast == null) {
         return <></>;
     }
 
     console.log('rendering content');
+    const post = posts[0];
 
-    const postElements = posts.map((post, i) => (
-        <div key={i}>
-            <BlogHeader title={post.title} date={post.date}></BlogHeader>
-            <div>{map_children(post.ast)}</div>
-        </div>
-    ));
+    if (post.ast == null) {
+        return <></>;
+    }
+
     return (
         <div
             style={{
@@ -269,31 +289,64 @@ const Content: FC = observer(() => {
                 marginBottom: '3rem',
             }}
         >
-            {postElements}
+            <BlogHeader title={post.title} date={post.date}></BlogHeader>
+            <div>{map_children(post.ast)}</div>
         </div>
     );
 });
 
+const collect_headings = (root: commonmark.Node) => {
+    const headings: Array<string> = [];
+    collect_children(root).forEach((x) => {
+        if (x.type === 'heading' && x?.firstChild?.literal != null) {
+            headings.push(x.firstChild.literal);
+        }
+    });
+    return headings;
+};
+
 const Index: FC = observer(() => {
     const { posts } = useContext(RootStoreContext);
 
-    if (posts == null) {
+    if (posts == null || posts[0].ast == null) {
         return <></>;
     }
 
     console.log('rendering index');
-    const titles = posts.map((post, i) => (
+
+    const headings = collect_headings(posts[0].ast);
+
+    const titles = headings.map((heading, i) => (
         <li key={i}>
-            <a className="IndexLink" href="/">
-                <div style={{ padding: '0.2rem 0' }}>{post.title}</div>
+            <a className="IndexLink" href={`#${to_id(heading)}`}>
+                <div style={{ padding: '0.2rem 0' }}>{heading}</div>
             </a>
         </li>
     ));
+
     return (
         <div style={{ padding: '1rem' }}>
             <div style={{ position: 'sticky', top: '4rem', paddingTop: '1rem' }}>
                 <div style={{ fontWeight: 'bold', paddingBottom: '1rem' }}>IN THIS ARTICLE</div>
                 <ul style={{ padding: 0, listStyleType: 'none' }}>{titles}</ul>
+            </div>
+        </div>
+    );
+});
+
+const Article: FC = observer(() => {
+    const { posts } = useContext(RootStoreContext);
+
+    if (posts != null && posts[0].ast == null) {
+        posts[0].loadMarkdown();
+        return <p>nothing to see here</p>;
+    }
+
+    return (
+        <div style={{ display: 'grid', justifyItems: 'center' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto auto', gridColumnGap: '1rem' }}>
+                <Content></Content>
+                <Index></Index>
             </div>
         </div>
     );
@@ -428,108 +481,23 @@ const Footer: FC = () => {
 const store = new RootStore();
 
 const App: FC = () => {
-    let data = [
+    const data = [
         {
             title: 'This Is a Mockup',
-            date: 'November 10, 2019',
-            content: `
-# This Is a Poem About Fear
-
-I must not fear.
-Fear is the mind-killer.
-Fear is the little-death that brings total obliteration.
-I will face my fear
-I will permit it to pass over me and through me.
-And when it has gone past, I will turn the inner eye to see its path.
-Where the fear has gone there will be nothing. Only I will remain.
-
-I must not fear.
-Fear is the mind-killer.
-Fear is the little-death that brings total obliteration.
-**I will face my fear**.
-I will permit it to pass over me and through me.
-And when it has gone past, I will turn the inner eye to see its path.
-Where the fear has gone there will be nothing. Only I will remain.
-
-I must not fear.
-Fear is the mind-killer.
-Fear is the little-death that brings total obliteration.
-[some other link](foobar.com)
-I will face my fear.
-I will permit it to pass over me and through me.
-And when it has gone past, I will turn the inner eye to see its path.
-Where the fear has gone there will be nothing. Only I will remain.
-[some link](google.com)
-
-# The End
-
-some more text:
-
-* I must not fear
-* fear is the mind-killer
-* fear is the little death that brings total obliteration
-* I will face my fear
-* I will permit it to pass over me and through me
-* When it has gone past I will turn the inner eye to see its path
-* Where the fear has gone _there will be nothing_
-* Only I will remain
-
-and some closing remarks. wow so many words
-
-# This Is a Poem About Fear
-I must not fear.
-Fear is the mind-killer.
-Fear is the little-death that brings total obliteration.
-I will face my fear.
-I will permit it to pass over me and through me.
-And when it has gone past, I will turn the inner eye to see its path.
-Where the fear has gone there will be nothing. Only I will remain.
-
-I must not fear.
-Fear is the mind-killer.
-Fear is the little-death that brings total obliteration.
-**I will face my fear**.
-I will permit it to pass over me and through me.
-And when it has gone past, I will turn the inner eye to see its path.
-Where the fear has gone there will be nothing. Only I will remain.
-`,
+            date: 'January 1, 2022',
+            url: 'blog/sample.md',
         },
         {
-            title: 'This is a Second Post',
-            date: 'December 11, 2022',
-            content: `
-## This Is Just a Random Title
-
-This is a bunch of **nothing** really.
-Just some random words.
-
-\`\`\`
-/* this is a comment */
-const foo = () => {
-    return nothing;
-}
-
-/* and this is another comment */
-const bar = () => {
-    return (
-        <div className="bar">
-            this is some text
-        </div>
-    );
-}
-\`\`\`
-
-I must not fear.
-Fear is the mind-killer.
-Fear is the little-death that brings total obliteration.
-**I will face my fear**.
-I will permit it to pass over me and through me.
-And when it has gone past, I will turn the inner eye to see its path.
-Where the fear has gone there will be nothing. Only I will remain.
-`,
+            title: 'This Is a Second Mockup',
+            date: 'February 2, 2022',
+            url: 'blog/sample.md',
+        },
+        {
+            title: 'This Is a Third Mockup',
+            date: 'March 3, 2022',
+            url: 'blog/sample.md',
         },
     ];
-    data = [...data, ...data, ...data, ...data];
     store.loadBlogPosts(data);
     return (
         <RootStoreContext.Provider value={store}>
@@ -537,17 +505,12 @@ Where the fear has gone there will be nothing. Only I will remain.
                 style={{
                     display: 'grid',
                     gridTemplateRows: 'auto auto auto',
-                    rowGap: '10px',
+                    rowGap: '2rem',
                     alignItems: 'start',
                 }}
             >
                 <Header></Header>
-                <div style={{ display: 'grid', justifyItems: 'center' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'auto auto', gridColumnGap: '1rem' }}>
-                        <Content></Content>
-                        <Index></Index>
-                    </div>
-                </div>
+                <Article></Article>
                 <Footer></Footer>
             </div>
         </RootStoreContext.Provider>
