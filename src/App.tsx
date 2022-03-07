@@ -4,6 +4,7 @@ import { observer } from 'mobx-react-lite';
 import * as commonmark from 'commonmark';
 import './App.css';
 import rose from './rose.jpg';
+import dunes from './dunes.jpg';
 
 /***********************************************************************
  * TODO
@@ -31,7 +32,7 @@ DONE add some simple inline css
 
 /* CSS
 DONE study CSS Grids: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout/Basic_Concepts_of_Grid_Layout
-DONE find top personal techincal blogs and choose one to copy
+DONE find top personal technical blogs and choose one to copy
 TODO create fixed layout first, then make it responsive
 TODO study CSS layouts in general
 TODO get rid of most CSS magic numbers
@@ -125,10 +126,21 @@ const map_children = (node: commonmark.Node) => (
 
 const Other: React.FC = ({ children }) => <p>{children}</p>;
 
-const Code: React.FC = ({ children }) => <code>{children}</code>;
+const Code: React.FC = ({ children }) => (
+    <code style={{ fontFamily: 'Fira Code', backgroundColor: '#eeeeee' }}>{children}</code>
+);
 
 const CodeBlock: React.FC = ({ children }) => (
-    <pre style={{ font: 'Fira Code', fontSize: '1rem', backgroundColor: '#eeeeee', padding: '1rem', margin: '1rem 0' }}>
+    <pre
+        style={{
+            font: 'Fira Code',
+            fontSize: '1rem',
+            backgroundColor: '#eeeeee',
+            padding: '1rem',
+            margin: '1rem 0',
+            border: 'solid 1px #dddddd',
+        }}
+    >
         {children}
     </pre>
 );
@@ -146,7 +158,8 @@ const Heading: React.FC<HeadingProps> = ({ id, children }) => (
                 fontFamily: 'Hind',
                 fontSize: '2rem',
                 fontWeight: '500',
-                marginTop: '1rem',
+                marginTop: '2rem',
+                marginBottom: '1rem',
             }}
         >
             {children}
@@ -259,7 +272,7 @@ const BlogHeader: FC<BlogHeaderProps> = observer(({ title, date }) => {
                     Published on {date} | By <a href="/about">David Varela</a>
                 </div>
             </div>
-            <img src={rose} style={{ width: '100%', aspectRatio: '2/1', objectFit: 'cover' }}></img>
+            <img src={dunes} style={{ width: '100%', aspectRatio: '2/1', objectFit: 'cover' }}></img>
         </div>
     );
 });
@@ -480,24 +493,25 @@ const Footer: FC = () => {
 
 const store = new RootStore();
 
-const App: FC = () => {
-    const data = [
-        {
-            title: 'This Is a Mockup',
-            date: 'January 1, 2022',
-            url: 'blog/sample.md',
-        },
-        {
-            title: 'This Is a Second Mockup',
-            date: 'February 2, 2022',
-            url: 'blog/sample.md',
-        },
-        {
-            title: 'This Is a Third Mockup',
-            date: 'March 3, 2022',
-            url: 'blog/sample.md',
-        },
-    ];
+const data = [
+    {
+        title: 'Julia Pkg Tutorial',
+        date: 'January 1, 2022',
+        url: 'blog/pkg_tutorial.md',
+    },
+    {
+        title: 'This Is a Second Mockup',
+        date: 'February 2, 2022',
+        url: 'blog/sample.md',
+    },
+    {
+        title: 'This Is a Third Mockup',
+        date: 'March 3, 2022',
+        url: 'blog/sample.md',
+    },
+];
+
+export const App: FC = () => {
     store.loadBlogPosts(data);
     return (
         <RootStoreContext.Provider value={store}>
@@ -517,6 +531,23 @@ const App: FC = () => {
     );
 };
 
-/* Font Awesome Free 5.15.3 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) */
+export const About: FC = () => {
+    return (
+        <div
+            style={{
+                display: 'grid',
+                gridTemplateRows: 'auto auto auto',
+                rowGap: '2rem',
+                alignItems: 'start',
+            }}
+        >
+            <Header></Header>
+            <div style={{ minHeight: '100vh' }}>
+                <p>this is about me</p>
+            </div>
+            <Footer></Footer>
+        </div>
+    );
+};
 
-export default App;
+/* Font Awesome Free 5.15.3 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) */
