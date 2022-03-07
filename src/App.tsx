@@ -3,6 +3,7 @@ import { makeAutoObservable } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import * as commonmark from 'commonmark';
 import './App.css';
+import rose from './rose.jpg';
 
 /***********************************************************************
  * TODO
@@ -116,11 +117,27 @@ const Other: React.FC = ({ children }) => <p>{children}</p>;
 
 const Code: React.FC = ({ children }) => <code>{children}</code>;
 
-const CodeBlock: React.FC = ({ children }) => <pre>{children}</pre>;
+const CodeBlock: React.FC = ({ children }) => (
+    <pre style={{ font: 'Fira Code', fontSize: '1rem', backgroundColor: '#eeeeee', padding: '1rem', margin: '1rem 0' }}>
+        {children}
+    </pre>
+);
 
 const Emph: React.FC = ({ children }) => <span>{children}</span>;
 
-const Heading: React.FC = ({ children }) => <h3 style={{ padding: '1rem 0', color: '#333333' }}>{children}</h3>;
+const Heading: React.FC = ({ children }) => (
+    <h2
+        style={{
+            fontFamily: 'Hind',
+            marginTop: '1rem',
+            marginBottom: '0.5rem',
+            fontSize: '2rem',
+            fontWeight: '500',
+        }}
+    >
+        {children}
+    </h2>
+);
 
 type LinkProps = {
     href: string; // TODO
@@ -135,7 +152,7 @@ const OrderedList: React.FC = ({ children }) => <ol>{children}</ol>;
 
 const Paragraph: React.FC = ({ children }) => <p>{children}</p>;
 
-const Strong: React.FC = ({ children }) => <span>{children}</span>;
+const Strong: React.FC = ({ children }) => <span style={{ fontWeight: 'bold' }}>{children}</span>;
 
 type MappingProps = {
     node: commonmark.Node;
@@ -214,9 +231,14 @@ type BlogHeaderProps = {
 
 const BlogHeader: FC<BlogHeaderProps> = observer(({ title, date }) => {
     return (
-        <div style={{ marginTop: '2rem' }}>
-            <h3 style={{ fontSize: '40px', marginBottom: '0px' }}>{title}</h3>
-            <h3 style={{ fontSize: '14px', color: '#555555' }}>{date}</h3>
+        <div style={{ marginBottom: '2rem' }}>
+            <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ fontFamily: 'Hind', fontSize: '3rem', fontWeight: '500' }}>{title}</h3>
+                <div style={{ fontSize: '1rem', fontWeight: 'normal', color: '#555555' }}>
+                    Published on {date} | By <a href="/about">David Varela</a>
+                </div>
+            </div>
+            <img src={rose} style={{ width: '100%', aspectRatio: '2/1', objectFit: 'cover' }}></img>
         </div>
     );
 });
@@ -244,6 +266,7 @@ const Content: FC = observer(() => {
                 display: 'grid',
                 gridTemplateColumns: '1fr',
                 gap: '15px',
+                marginBottom: '3rem',
             }}
         >
             {postElements}
@@ -261,13 +284,15 @@ const Index: FC = observer(() => {
     console.log('rendering index');
     const titles = posts.map((post, i) => (
         <li key={i}>
-            <a>{post.title}</a>
+            <a className="IndexLink" href="/">
+                <div style={{ padding: '0.2rem 0' }}>{post.title}</div>
+            </a>
         </li>
     ));
     return (
         <div style={{ padding: '1rem' }}>
             <div style={{ position: 'sticky', top: '4rem', paddingTop: '1rem' }}>
-                <div style={{ fontWeight: 'bold', paddingBottom: '1rem' }}>In this article</div>
+                <div style={{ fontWeight: 'bold', paddingBottom: '1rem' }}>IN THIS ARTICLE</div>
                 <ul style={{ padding: 0, listStyleType: 'none' }}>{titles}</ul>
             </div>
         </div>
@@ -362,29 +387,40 @@ const Footer: FC = () => {
     return (
         <div
             style={{
-                display: 'flex',
-                justifyContent: 'end',
-                alignItems: 'center',
-                padding: '1rem 5%',
+                display: 'grid',
+                gridTemplateAreas: `". links copyright"`,
+                gridTemplateColumns: '1fr 1fr 1fr',
+                gridTemplateRows: '1fr',
+                padding: '1rem 2rem',
                 color: '#222222',
                 backgroundColor: '#eeeeee',
             }}
         >
-            <div style={{ justifySelf: 'center', display: 'flex', flexDirection: 'row' }}>
+            <div
+                style={{
+                    gridArea: 'links',
+                    alignSelf: 'center',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                }}
+            >
                 <LinkWidget href="https://github.com/00vareladavid" title="GitHub">
                     <path d="M0 18 C0 12 3 10 3 9 C2.5 7 2.5 4 3 3 C6 3 9 5 10 6 C12 5 14 5 16 5 C18 5 20 5 22 6 C23 5 26 3 29 3 C29.5 4 29.5 7 29 9 C29 10 32 12 32 18 C32 25 30 30 16 30 C2 30 0 25 0 18 M3 20 C3 24 4 28 16 28 C28 28 29 24 29 20 C29 16 28 14 16 14 C4 14 3 16 3 20 M8 21 A1.5 2.5 0 0 0 13 21 A1.5 2.5 0 0 0 8 21 M24 21 A1.5 2.5 0 0 0 19 21 A1.5 2.5 0 0 0 24 21 z"></path>
                 </LinkWidget>
                 <LinkWidget href="https://twitter.com/00vareladavid" title="Twitter">
                     <path d="M2 4 C6 8 10 12 15 11 A6 6 0 0 1 22 4 A6 6 0 0 1 26 6 A8 8 0 0 0 31 4 A8 8 0 0 1 28 8 A8 8 0 0 0 32 7 A8 8 0 0 1 28 11 A18 18 0 0 1 10 30 A18 18 0 0 1 0 27 A12 12 0 0 0 8 24 A8 8 0 0 1 3 20 A8 8 0 0 0 6 19.5 A8 8 0 0 1 0 12 A8 8 0 0 0 3 13 A8 8 0 0 1 2 4"></path>
                 </LinkWidget>
-                <LinkWidget href="https://stackoverflow.com/users/7077117" title="StackOverflow" dims="384 512">
-                    <path d="M290.7 311L95 269.7 86.8 309l195.7 41zm51-87L188.2 95.7l-25.5 30.8 153.5 128.3zm-31.2 39.7L129.2 179l-16.7 36.5L293.7 300zM262 32l-32 24 119.3 160.3 32-24zm20.5 328h-200v39.7h200zm39.7 80H42.7V320h-40v160h359.5V320h-40z"></path>
-                </LinkWidget>
                 <LinkWidget href="https://news.ycombinator.com/user?id=00vareladavid" title="HackerNews" dims="448 512">
                     <path d="M400 32H48C21.5 32 0 53.5 0 80v352c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48zM21.2 229.2H21c.1-.1.2-.3.3-.4 0 .1 0 .3-.1.4zm218 53.9V384h-31.4V281.3L128 128h37.3c52.5 98.3 49.2 101.2 59.3 125.6 12.3-27 5.8-24.4 60.6-125.6H320l-80.8 155.1z"></path>
                 </LinkWidget>
+                <LinkWidget href="https://stackoverflow.com/users/7077117" title="StackOverflow" dims="384 512">
+                    <path d="M290.7 311L95 269.7 86.8 309l195.7 41zm51-87L188.2 95.7l-25.5 30.8 153.5 128.3zm-31.2 39.7L129.2 179l-16.7 36.5L293.7 300zM262 32l-32 24 119.3 160.3 32-24zm20.5 328h-200v39.7h200zm39.7 80H42.7V320h-40v160h359.5V320h-40z"></path>
+                </LinkWidget>
             </div>
-            <div>© 2022 David E Varela. All rights reserved.</div>
+            <div style={{ gridArea: 'copyright', display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
+                © 2022 David E Varela. All rights reserved.
+            </div>
         </div>
     );
 };
@@ -395,13 +431,14 @@ const App: FC = () => {
     let data = [
         {
             title: 'This Is a Mockup',
-            date: '11/10/2019',
+            date: 'November 10, 2019',
             content: `
-## This is a poem about fear
+# This Is a Poem About Fear
+
 I must not fear.
 Fear is the mind-killer.
 Fear is the little-death that brings total obliteration.
-**I will face my fear**.
+I will face my fear
 I will permit it to pass over me and through me.
 And when it has gone past, I will turn the inner eye to see its path.
 Where the fear has gone there will be nothing. Only I will remain.
@@ -418,13 +455,16 @@ I must not fear.
 Fear is the mind-killer.
 Fear is the little-death that brings total obliteration.
 [some other link](foobar.com)
-**I will face my fear**.
+I will face my fear.
 I will permit it to pass over me and through me.
 And when it has gone past, I will turn the inner eye to see its path.
 Where the fear has gone there will be nothing. Only I will remain.
 [some link](google.com)
 
-## The end
+# The End
+
+some more text:
+
 * I must not fear
 * fear is the mind-killer
 * fear is the little death that brings total obliteration
@@ -434,11 +474,13 @@ Where the fear has gone there will be nothing. Only I will remain.
 * Where the fear has gone _there will be nothing_
 * Only I will remain
 
-## This is a poem about fear
+and some closing remarks. wow so many words
+
+# This Is a Poem About Fear
 I must not fear.
 Fear is the mind-killer.
 Fear is the little-death that brings total obliteration.
-**I will face my fear**.
+I will face my fear.
 I will permit it to pass over me and through me.
 And when it has gone past, I will turn the inner eye to see its path.
 Where the fear has gone there will be nothing. Only I will remain.
@@ -450,22 +492,40 @@ Fear is the little-death that brings total obliteration.
 I will permit it to pass over me and through me.
 And when it has gone past, I will turn the inner eye to see its path.
 Where the fear has gone there will be nothing. Only I will remain.
-
-
 `,
         },
         {
             title: 'This is a Second Post',
-            date: '11/11/2021',
+            date: 'December 11, 2022',
             content: `
-## This is not a poem about fear
-This is a bunch of nothing really.
+## This Is Just a Random Title
+
+This is a bunch of **nothing** really.
 Just some random words.
 
-* just
-* some
-* randoms
-* words
+\`\`\`
+/* this is a comment */
+const foo = () => {
+    return nothing;
+}
+
+/* and this is another comment */
+const bar = () => {
+    return (
+        <div className="bar">
+            this is some text
+        </div>
+    );
+}
+\`\`\`
+
+I must not fear.
+Fear is the mind-killer.
+Fear is the little-death that brings total obliteration.
+**I will face my fear**.
+I will permit it to pass over me and through me.
+And when it has gone past, I will turn the inner eye to see its path.
+Where the fear has gone there will be nothing. Only I will remain.
 `,
         },
     ];
@@ -483,7 +543,7 @@ Just some random words.
             >
                 <Header></Header>
                 <div style={{ display: 'grid', justifyItems: 'center' }}>
-                    <div style={{ display: 'grid', gridGap: '30px', gridTemplateColumns: '2fr 1fr', width: '60vw' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'auto auto', gridColumnGap: '1rem' }}>
                         <Content></Content>
                         <Index></Index>
                     </div>

@@ -1,5 +1,10 @@
 a {
     color: #3578e5;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
 }
 
 a.Branding {
@@ -8,7 +13,7 @@ a.Branding {
 }
 
 a.Branding:hover {
-    color: gainsboro;
+    opacity: 0.5;
 }
 
 a.LinkWidget {
@@ -25,5 +30,13 @@ a.NavButton {
 }
 
 a.NavButton:hover {
-    color: gainsboro;
+    opacity: 0.5;
+}
+
+a.IndexLink {
+    color: #444444;
+}
+
+a.IndexLink:hover {
+    color: #3578e5;
 }
