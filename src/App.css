@@ -35,7 +35,6 @@ a.NavButton:hover {
 
 a.NavButton#Contact {
     color: white;
-    border: solid 1px black;
     padding: 0 1rem;
     border-radius: 1rem;
     background-color: #0B0033;

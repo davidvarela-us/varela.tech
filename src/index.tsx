@@ -11,7 +11,7 @@ ReactDOM.render(
             <Routes>
                 <Route path="/" element={<Landing />} />
                 <Route path="/about" element={<About />} />
-                <Route path="/blog" element={<BlogIndex />}>
+                <Route path="/articles" element={<BlogIndex />}>
                     <Route path=":articleID" element={<Article />} />
                 </Route>
                 <Route path="/portfolio" element={<Portfolio />} />

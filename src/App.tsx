@@ -4,8 +4,9 @@ import { observer } from 'mobx-react-lite';
 import { Outlet, Link, useParams } from 'react-router-dom';
 import * as commonmark from 'commonmark';
 import './App.css';
-import rose from './rose.jpg';
 import dunes from './dunes.jpg';
+import contrast from './contrast.jpg';
+// import rose from './rose.jpg';
 
 /***********************************************************************
  * TODO
@@ -193,7 +194,7 @@ const OrderedList: React.FC = ({ children }) => <ol>{children}</ol>;
 
 const Paragraph: React.FC = ({ children }) => <p style={{ marginBottom: '1rem' }}>{children}</p>;
 
-const Strong: React.FC = ({ children }) => <span style={{ fontWeight: 'bold' }}>{children}</span>;
+const Strong: React.FC = ({ children }) => <span style={{ fontWeight: '600' }}>{children}</span>;
 
 const to_id = (title: string): string => title.toLowerCase().split(' ').join('_');
 
@@ -289,7 +290,10 @@ const BlogHeader: FC<BlogHeaderProps> = observer(({ title, date, image }) => {
                     Published on {date} | By <a href="/about">David Varela</a>
                 </div>
             </div>
-            <img src={image} style={{ width: '100%', aspectRatio: '2/1', objectFit: 'cover' }}></img>
+            <img
+                src={image}
+                style={{ width: '100%', aspectRatio: '2/1', objectFit: 'cover', marginBottom: '2rem' }}
+            ></img>
         </div>
     );
 });
@@ -449,7 +453,7 @@ const Header: FC = observer(() => {
                 }}
             >
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', color: 'gray' }}>
-                    <NavButton contact={false} href="/blog">
+                    <NavButton contact={false} href="/articles">
                         ARTICLES
                     </NavButton>
                     <NavButton contact={false} href="/portfolio">
@@ -662,9 +666,9 @@ type BlogIndexLinkProps = {
 
 const BlogIndexLink: FC<BlogIndexLinkProps> = ({ title, href, date }) => {
     return (
-        <li style={{}}>
+        <li>
             <Link className="BlogIndexLink" to={href}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '4rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '10rem' }}>
                     <span style={{ fontSize: '1.5rem' }}>{title}</span>
                     <span style={{ fontSize: '1rem', color: DATE_COLOR }}>{date}</span>
                 </div>
@@ -674,6 +678,12 @@ const BlogIndexLink: FC<BlogIndexLinkProps> = ({ title, href, date }) => {
 };
 
 const BlogIndexMain: FC = () => {
+    const { posts } = useContext(RootStoreContext);
+
+    if (posts == null) {
+        return <></>;
+    }
+
     return (
         <div
             style={{
@@ -694,9 +704,9 @@ const BlogIndexMain: FC = () => {
                 Articles
             </h1>
             <ul style={{ padding: '0', listStyle: 'none' }}>
-                <BlogIndexLink href="/blog/0" title="Julia Pkg Tutorial" date="11.11.22" />
-                <BlogIndexLink href="/blog/1" title="Item Two" date="08.09.21" />
-                <BlogIndexLink href="/blog/2" title="To be or not to be, that is the question" date="01.07.21" />
+                {posts.map((post, i) => (
+                    <BlogIndexLink key={i} title={post.title} date={post.date} href={`/articles/${i}`} />
+                ))}
             </ul>
         </div>
     );
@@ -704,22 +714,16 @@ const BlogIndexMain: FC = () => {
 
 const ARTICLES = [
     {
+        title: 'A Powerful Principle for System Design',
+        date: 'March 12, 2022',
+        url: '8020.md',
+        image: contrast,
+    },
+    {
         title: 'Julia Pkg Tutorial',
-        date: 'January 1, 2022',
+        date: 'January 10, 2021',
         url: 'pkg_tutorial.md',
         image: dunes,
-    },
-    {
-        title: 'This Is a Second Mockup',
-        date: 'February 2, 2022',
-        url: 'sample.md',
-        image: rose,
-    },
-    {
-        title: 'This Is a Third Mockup',
-        date: 'March 3, 2022',
-        url: 'sample.md',
-        image: rose,
     },
 ];
 
@@ -734,7 +738,7 @@ export const BlogIndex: FC = observer(() => {
 
     return (
         <RootStoreContext.Provider value={store}>
-            <HeaderAndFooter>{store.articleID == null ? <BlogIndexMain /> : <Outlet />}</HeaderAndFooter>;
+            <HeaderAndFooter>{store.articleID == null ? <BlogIndexMain /> : <Outlet />}</HeaderAndFooter>
         </RootStoreContext.Provider>
     );
 });
