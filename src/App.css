@@ -33,10 +33,22 @@ a.NavButton:hover {
     opacity: 0.5;
 }
 
+a.NavButton#Contact {
+    color: white;
+    border: solid 1px black;
+    padding: 0 1rem;
+    border-radius: 1rem;
+    background-color: #0B0033;
+}
+
 a.IndexLink {
     color: #444444;
 }
 
 a.IndexLink:hover {
     color: #3578e5;
+}
+
+a.BlogIndexLink {
+    color: black;
 }

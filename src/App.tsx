@@ -1,6 +1,7 @@
 import React, { useContext, createContext, FC } from 'react';
 import { makeAutoObservable } from 'mobx';
 import { observer } from 'mobx-react-lite';
+import { Outlet, Link, useParams } from 'react-router-dom';
 import * as commonmark from 'commonmark';
 import './App.css';
 import rose from './rose.jpg';
@@ -52,13 +53,15 @@ class BlogPostStore {
     title: string;
     date: string;
     url: string;
+    image: string;
     _ast: commonmark.Node | null;
 
-    constructor(title: string, date: string, url: string) {
+    constructor(title: string, date: string, url: string, image: string) {
         makeAutoObservable(this);
         this.title = title;
         this.date = date;
         this.url = url;
+        this.image = image;
         this._ast = null;
     }
 
@@ -70,7 +73,7 @@ class BlogPostStore {
         console.log('loading markdown');
         // eslint-disable-next-line
         // @ts-ignore
-        const markdown = yield fetch(this.url);
+        const markdown = yield fetch(`/markdown/${this.url}`);
         const raw: string = yield markdown.text();
         const reader = new commonmark.Parser();
         this._ast = reader.parse(raw);
@@ -82,9 +85,11 @@ interface BlogPost {
     title: string;
     date: string;
     url: string;
+    image: string;
 }
 class RootStore {
     _posts: BlogPostStore[] | undefined = undefined;
+    _articleID: number | undefined = undefined;
 
     constructor() {
         makeAutoObservable(this);
@@ -94,8 +99,16 @@ class RootStore {
         return this._posts;
     }
 
+    get articleID(): number | undefined {
+        return this._articleID;
+    }
+
+    set articleID(x: number | undefined) {
+        this._articleID = x;
+    }
+
     loadBlogPosts(xs: BlogPost[]) {
-        this._posts = xs.map((x) => new BlogPostStore(x.title, x.date, x.url));
+        this._posts = xs.map((x) => new BlogPostStore(x.title, x.date, x.url, x.image));
     }
 }
 
@@ -148,7 +161,7 @@ const CodeBlock: React.FC = ({ children }) => (
 const Emph: React.FC = ({ children }) => <span>{children}</span>;
 
 type HeadingProps = {
-    id: string | null;
+    id?: string;
 };
 
 const Heading: React.FC<HeadingProps> = ({ id, children }) => (
@@ -158,8 +171,8 @@ const Heading: React.FC<HeadingProps> = ({ id, children }) => (
                 fontFamily: 'Hind',
                 fontSize: '2rem',
                 fontWeight: '500',
-                marginTop: '2rem',
-                marginBottom: '1rem',
+                marginTop: '3rem',
+                marginBottom: '2rem',
             }}
         >
             {children}
@@ -167,10 +180,10 @@ const Heading: React.FC<HeadingProps> = ({ id, children }) => (
     </a>
 );
 
-type LinkProps = {
+type MDLinkProps = {
     href: string; // TODO
 };
-const Link: React.FC<LinkProps> = ({ href, children }) => <a href={href}>{children}</a>;
+const MDLink: React.FC<MDLinkProps> = ({ href, children }) => <a href={href}>{children}</a>;
 
 const List: React.FC = ({ children }) => <ul>{children}</ul>;
 
@@ -234,13 +247,13 @@ const Mapping: FC<MappingProps> = ({ node }) => {
             break;
         case 'heading':
             return (
-                <Heading id={node?.firstChild?.literal == null ? null : to_id(node.firstChild.literal)}>
+                <Heading id={node?.firstChild?.literal == null ? undefined : to_id(node.firstChild.literal)}>
                     {map_children(node)}
                 </Heading>
             );
             break;
         case 'link':
-            return <Link href={node.destination == null ? '' : node.destination}>{map_children(node)}</Link>;
+            return <MDLink href={node.destination == null ? '' : node.destination}>{map_children(node)}</MDLink>;
             break;
         case 'list':
             if (node.listType === 'bullet') {
@@ -258,34 +271,38 @@ const Mapping: FC<MappingProps> = ({ node }) => {
  * CONTENT
  ***********************************************************************/
 
+const DATE_COLOR = '#555555';
+const MAX_CONTENT_WIDTH = '786px';
+
 type BlogHeaderProps = {
     title: string;
     date: string;
+    image: string;
 };
 
-const BlogHeader: FC<BlogHeaderProps> = observer(({ title, date }) => {
+const BlogHeader: FC<BlogHeaderProps> = observer(({ title, date, image }) => {
     return (
         <div>
             <div style={{ marginBottom: '2rem' }}>
                 <h1 style={{ fontFamily: 'Hind', fontSize: '3rem', fontWeight: '500' }}>{title}</h1>
-                <div style={{ fontSize: '1rem', fontWeight: 'normal', color: '#555555' }}>
+                <div style={{ fontSize: '1rem', fontWeight: 'normal', color: DATE_COLOR }}>
                     Published on {date} | By <a href="/about">David Varela</a>
                 </div>
             </div>
-            <img src={dunes} style={{ width: '100%', aspectRatio: '2/1', objectFit: 'cover' }}></img>
+            <img src={image} style={{ width: '100%', aspectRatio: '2/1', objectFit: 'cover' }}></img>
         </div>
     );
 });
 
 const Content: FC = observer(() => {
-    const { posts } = useContext(RootStoreContext);
+    const { posts, articleID } = useContext(RootStoreContext);
 
-    if (posts == null || posts[0].ast == null) {
+    if (posts == null || articleID == null || posts[articleID].ast == null) {
         return <></>;
     }
 
     console.log('rendering content');
-    const post = posts[0];
+    const post = posts[articleID];
 
     if (post.ast == null) {
         return <></>;
@@ -295,14 +312,14 @@ const Content: FC = observer(() => {
         <div
             style={{
                 /* restrict max paragraph length */
-                maxWidth: '786px',
+                maxWidth: MAX_CONTENT_WIDTH,
                 display: 'grid',
                 gridTemplateColumns: '1fr',
                 gap: '15px',
                 marginBottom: '3rem',
             }}
         >
-            <BlogHeader title={post.title} date={post.date}></BlogHeader>
+            <BlogHeader title={post.title} date={post.date} image={post.image}></BlogHeader>
             <div>{map_children(post.ast)}</div>
         </div>
     );
@@ -319,15 +336,21 @@ const collect_headings = (root: commonmark.Node) => {
 };
 
 const Index: FC = observer(() => {
-    const { posts } = useContext(RootStoreContext);
+    const { posts, articleID } = useContext(RootStoreContext);
 
-    if (posts == null || posts[0].ast == null) {
+    if (posts == null || articleID == null || posts[articleID].ast == null) {
         return <></>;
     }
 
     console.log('rendering index');
 
-    const headings = collect_headings(posts[0].ast);
+    const ast = posts[articleID].ast;
+
+    if (ast == null) {
+        return <></>;
+    }
+
+    const headings = collect_headings(ast);
 
     const titles = headings.map((heading, i) => (
         <li key={i}>
@@ -347,12 +370,21 @@ const Index: FC = observer(() => {
     );
 });
 
-const Article: FC = observer(() => {
-    const { posts } = useContext(RootStoreContext);
+export const Article: FC = observer(() => {
+    const { posts, articleID } = useContext(RootStoreContext);
 
-    if (posts != null && posts[0].ast == null) {
-        posts[0].loadMarkdown();
-        return <p>nothing to see here</p>;
+    console.log(`article: ${articleID}`);
+    let post: BlogPostStore | undefined;
+
+    if (posts != null && articleID != null) {
+        post = posts[articleID];
+    } else {
+        return <></>;
+    }
+
+    if (post.ast == null) {
+        post.loadMarkdown();
+        return <></>;
     }
 
     return (
@@ -367,14 +399,15 @@ const Article: FC = observer(() => {
 
 type NavButtonProps = {
     href: string;
+    contact: boolean;
 };
 
-const NavButton: FC<NavButtonProps> = ({ children, href }) => {
+const NavButton: FC<NavButtonProps> = ({ children, href, contact }) => {
     return (
         <div style={{ padding: '0 1rem' }}>
-            <a className="NavButton" href={href}>
+            <Link id={contact ? 'Contact' : undefined} className="NavButton" to={href}>
                 {children}
-            </a>
+            </Link>
         </div>
     );
 };
@@ -392,6 +425,7 @@ const Header: FC = observer(() => {
                 fontSize: '30px',
                 backgroundColor: '#ffffff',
                 borderBottom: 'solid 1px gainsboro',
+                marginBottom: '2rem',
             }}
         >
             <div
@@ -415,9 +449,18 @@ const Header: FC = observer(() => {
                 }}
             >
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', color: 'gray' }}>
-                    <NavButton href="/blog">BLOG</NavButton>
-                    <NavButton href="/portfolio">PORTFOLIO</NavButton>
-                    <NavButton href="/about">ABOUT</NavButton>
+                    <NavButton contact={false} href="/blog">
+                        ARTICLES
+                    </NavButton>
+                    <NavButton contact={false} href="/portfolio">
+                        PORTFOLIO
+                    </NavButton>
+                    <NavButton contact={false} href="/about">
+                        ABOUT
+                    </NavButton>
+                    <NavButton contact={true} href="/contact">
+                        CONTACT
+                    </NavButton>
                 </div>
             </div>
         </div>
@@ -432,7 +475,7 @@ type LinkWidgetProps = {
 
 const LinkWidget: FC<LinkWidgetProps> = ({ children, href, title, dims }) => {
     return (
-        <div style={{ height: '2rem', width: '2rem', margin: '0 0.25rem' }}>
+        <div style={{ height: '2rem', width: '2rem', margin: '0 0.5rem' }}>
             <a href={href} title={title} className="LinkWidget">
                 <svg
                     data-icon={title}
@@ -491,63 +534,209 @@ const Footer: FC = () => {
     );
 };
 
-const store = new RootStore();
-
-const data = [
-    {
-        title: 'Julia Pkg Tutorial',
-        date: 'January 1, 2022',
-        url: 'blog/pkg_tutorial.md',
-    },
-    {
-        title: 'This Is a Second Mockup',
-        date: 'February 2, 2022',
-        url: 'blog/sample.md',
-    },
-    {
-        title: 'This Is a Third Mockup',
-        date: 'March 3, 2022',
-        url: 'blog/sample.md',
-    },
-];
-
-export const App: FC = () => {
-    store.loadBlogPosts(data);
-    return (
-        <RootStoreContext.Provider value={store}>
-            <div
-                style={{
-                    display: 'grid',
-                    gridTemplateRows: 'auto auto auto',
-                    rowGap: '2rem',
-                    alignItems: 'start',
-                }}
-            >
-                <Header></Header>
-                <Article></Article>
-                <Footer></Footer>
-            </div>
-        </RootStoreContext.Provider>
-    );
-};
-
-export const About: FC = () => {
+const HeaderAndFooter: FC = ({ children }) => {
     return (
         <div
             style={{
                 display: 'grid',
-                gridTemplateRows: 'auto auto auto',
-                rowGap: '2rem',
+                gridTemplateRows: 'min-content auto min-content',
                 alignItems: 'start',
+                rowGap: '2rem',
+                minHeight: '100vh',
             }}
         >
             <Header></Header>
-            <div style={{ minHeight: '100vh' }}>
-                <p>this is about me</p>
-            </div>
+            {children}
             <Footer></Footer>
         </div>
     );
 };
+
+export const Landing: FC = () => {
+    return (
+        <HeaderAndFooter>
+            <div
+                style={{
+                    display: 'grid',
+                    justifyContent: 'center',
+                }}
+            >
+                <div style={{ maxWidth: MAX_CONTENT_WIDTH }}>This is the landing page.</div>
+            </div>
+        </HeaderAndFooter>
+    );
+};
+
+const Block: FC = ({ children }) => {
+    return <p style={{ marginBottom: '1rem' }}>{children}</p>;
+};
+
+export const About: FC = () => {
+    return (
+        <HeaderAndFooter>
+            <div
+                style={{
+                    display: 'grid',
+                    justifyContent: 'center',
+                }}
+            >
+                <div style={{ maxWidth: MAX_CONTENT_WIDTH }}>
+                    <Heading> About </Heading>
+                    <Block>
+                        I&apos;m David Varela, a web consultant based in San Jose, CA. I help businesses connect with
+                        clients through the web.
+                    </Block>
+                    <Heading>My Philosophy</Heading>
+                    <Block>
+                        My philosophy is founded in relentless refinement. I believed that sustained focus and effort,
+                        more than anything else, has the power to shape the world.
+                    </Block>
+                    <Heading> About Me </Heading>
+                    <Block>
+                        I run my own web consulting business. Before running my own business I helped build an insurance
+                        technology startup, where I developed my passion for web technologies. I hold a Bachelor&apos;s
+                        Degree in Computer Science from the University of California, Davis.
+                    </Block>
+                    <Heading>Let&apos;s Chat</Heading>
+                    Interested in one of my articles? Looking to grow your business? Just want to say hello?
+                    <Link to={'/contact'}>let&apos;s chat</Link>. I warmly welcome the opportunity to connect with
+                    energetic, kind, thoughtful people.
+                </div>
+            </div>
+        </HeaderAndFooter>
+    );
+};
+
+export const Portfolio: FC = () => {
+    return (
+        <HeaderAndFooter>
+            <div
+                style={{
+                    display: 'grid',
+                    justifyContent: 'center',
+                }}
+            >
+                <div style={{ maxWidth: MAX_CONTENT_WIDTH }}>
+                    <p>This is the portfolio.</p>
+                </div>
+            </div>
+        </HeaderAndFooter>
+    );
+};
+
+export const Contact: FC = () => {
+    return (
+        <HeaderAndFooter>
+            <div
+                style={{
+                    display: 'grid',
+                    justifyContent: 'center',
+                }}
+            >
+                <div style={{ maxWidth: MAX_CONTENT_WIDTH }}>
+                    <p>
+                        Ready to level up your web identity? Not sure where to start? Shoot me an email and let&apos;s
+                        get started on building a brighter future for your business.
+                    </p>
+                    <Heading>Contact</Heading>
+                    <ul>
+                        <li>email: david@varela.tech | varela.tech@gmail.com</li>
+                        <li>phone: 408 410 8208</li>
+                    </ul>
+                    <Heading>How I can help</Heading>
+                    <p>
+                        The web has enabled a new era. But it can also complex and difficult to manage. I specialize in
+                        web design, efficiency, correctness, SEO, uptime, analytics, social media, user engagement.
+                    </p>
+                </div>
+            </div>
+        </HeaderAndFooter>
+    );
+};
+
+type BlogIndexLinkProps = {
+    title: string;
+    href: string;
+    date: string;
+};
+
+const BlogIndexLink: FC<BlogIndexLinkProps> = ({ title, href, date }) => {
+    return (
+        <li style={{}}>
+            <Link className="BlogIndexLink" to={href}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '4rem' }}>
+                    <span style={{ fontSize: '1.5rem' }}>{title}</span>
+                    <span style={{ fontSize: '1rem', color: DATE_COLOR }}>{date}</span>
+                </div>
+            </Link>
+        </li>
+    );
+};
+
+const BlogIndexMain: FC = () => {
+    return (
+        <div
+            style={{
+                display: 'grid',
+                justifyContent: 'center',
+            }}
+        >
+            <h1
+                style={{
+                    marginBottom: '2rem',
+                    display: 'flex',
+                    fontFamily: 'Hind',
+                    fontSize: '2rem',
+                    fontWeight: '500',
+                    justifyContent: 'center',
+                }}
+            >
+                Articles
+            </h1>
+            <ul style={{ padding: '0', listStyle: 'none' }}>
+                <BlogIndexLink href="/blog/0" title="Julia Pkg Tutorial" date="11.11.22" />
+                <BlogIndexLink href="/blog/1" title="Item Two" date="08.09.21" />
+                <BlogIndexLink href="/blog/2" title="To be or not to be, that is the question" date="01.07.21" />
+            </ul>
+        </div>
+    );
+};
+
+const ARTICLES = [
+    {
+        title: 'Julia Pkg Tutorial',
+        date: 'January 1, 2022',
+        url: 'pkg_tutorial.md',
+        image: dunes,
+    },
+    {
+        title: 'This Is a Second Mockup',
+        date: 'February 2, 2022',
+        url: 'sample.md',
+        image: rose,
+    },
+    {
+        title: 'This Is a Third Mockup',
+        date: 'March 3, 2022',
+        url: 'sample.md',
+        image: rose,
+    },
+];
+
+const store = new RootStore();
+store.loadBlogPosts(ARTICLES);
+
+export const BlogIndex: FC = observer(() => {
+    const params = useParams();
+    store.articleID = params.articleID == null ? undefined : parseInt(params.articleID);
+
+    console.log(`article ID: ${store.articleID}`);
+
+    return (
+        <RootStoreContext.Provider value={store}>
+            <HeaderAndFooter>{store.articleID == null ? <BlogIndexMain /> : <Outlet />}</HeaderAndFooter>;
+        </RootStoreContext.Provider>
+    );
+});
 
 /* Font Awesome Free 5.15.3 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) */

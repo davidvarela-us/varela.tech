@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import { App, About } from './App';
+import { Landing, Article, About, BlogIndex, Portfolio, Contact } from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
@@ -9,8 +9,13 @@ ReactDOM.render(
     <React.StrictMode>
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={<App />} />
+                <Route path="/" element={<Landing />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/blog" element={<BlogIndex />}>
+                    <Route path=":articleID" element={<Article />} />
+                </Route>
+                <Route path="/portfolio" element={<Portfolio />} />
+                <Route path="/contact" element={<Contact />} />
             </Routes>
         </BrowserRouter>
     </React.StrictMode>,
