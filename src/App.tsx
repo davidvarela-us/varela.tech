@@ -6,7 +6,7 @@ import * as commonmark from 'commonmark';
 import './App.css';
 import dunes from './dunes.jpg';
 import contrast from './contrast.jpg';
-// import rose from './rose.jpg';
+import roses from './rose.jpg';
 
 /***********************************************************************
  * TODO
@@ -140,24 +140,9 @@ const map_children = (node: commonmark.Node) => (
 
 const Other: React.FC = ({ children }) => <p>{children}</p>;
 
-const Code: React.FC = ({ children }) => (
-    <code style={{ fontFamily: 'Fira Code', backgroundColor: '#eeeeee' }}>{children}</code>
-);
+const Code: React.FC = ({ children }) => <code className="code">{children}</code>;
 
-const CodeBlock: React.FC = ({ children }) => (
-    <pre
-        style={{
-            font: 'Fira Code',
-            fontSize: '1rem',
-            backgroundColor: '#eeeeee',
-            padding: '1rem',
-            margin: '1rem 0',
-            border: 'solid 1px #dddddd',
-        }}
-    >
-        {children}
-    </pre>
-);
+const CodeBlock: React.FC = ({ children }) => <pre className="codeBlock">{children}</pre>;
 
 const Emph: React.FC = ({ children }) => <span>{children}</span>;
 
@@ -166,18 +151,8 @@ type HeadingProps = {
 };
 
 const Heading: React.FC<HeadingProps> = ({ id, children }) => (
-    <a href={id == null ? undefined : `#${id}`} id={id == null ? undefined : id} style={{ color: 'black' }}>
-        <h2
-            style={{
-                fontFamily: 'Hind',
-                fontSize: '2rem',
-                fontWeight: '500',
-                marginTop: '3rem',
-                marginBottom: '2rem',
-            }}
-        >
-            {children}
-        </h2>
+    <a href={id == null ? undefined : `#${id}`} id={id == null ? undefined : id}>
+        <h2 className="heading">{children}</h2>
     </a>
 );
 
@@ -192,9 +167,9 @@ const ListItem: React.FC = ({ children }) => <li>{children}</li>;
 
 const OrderedList: React.FC = ({ children }) => <ol>{children}</ol>;
 
-const Paragraph: React.FC = ({ children }) => <p style={{ marginBottom: '1rem' }}>{children}</p>;
+const Paragraph: React.FC = ({ children }) => <p className="paragraph">{children}</p>;
 
-const Strong: React.FC = ({ children }) => <span style={{ fontWeight: '600' }}>{children}</span>;
+const Strong: React.FC = ({ children }) => <span className="strong">{children}</span>;
 
 const to_id = (title: string): string => title.toLowerCase().split(' ').join('_');
 
@@ -284,16 +259,13 @@ type BlogHeaderProps = {
 const BlogHeader: FC<BlogHeaderProps> = observer(({ title, date, image }) => {
     return (
         <div>
-            <div style={{ marginBottom: '2rem' }}>
-                <h1 style={{ fontFamily: 'Hind', fontSize: '3rem', fontWeight: '500' }}>{title}</h1>
-                <div style={{ fontSize: '1rem', fontWeight: 'normal', color: DATE_COLOR }}>
+            <div className="blogHeader">
+                <h1 className="blogHeaderTitle">{title}</h1>
+                <div className="blogHeaderInfo">
                     Published on {date} | By <a href="/about">David Varela</a>
                 </div>
             </div>
-            <img
-                src={image}
-                style={{ width: '100%', aspectRatio: '2/1', objectFit: 'cover', marginBottom: '2rem' }}
-            ></img>
+            <img src={image} className="blogHeaderImage"></img>
         </div>
     );
 });
@@ -313,16 +285,7 @@ const Content: FC = observer(() => {
     }
 
     return (
-        <div
-            style={{
-                /* restrict max paragraph length */
-                maxWidth: MAX_CONTENT_WIDTH,
-                display: 'grid',
-                gridTemplateColumns: '1fr',
-                gap: '15px',
-                marginBottom: '3rem',
-            }}
-        >
+        <div className="content">
             <BlogHeader title={post.title} date={post.date} image={post.image}></BlogHeader>
             <div>{map_children(post.ast)}</div>
         </div>
@@ -331,6 +294,7 @@ const Content: FC = observer(() => {
 
 const collect_headings = (root: commonmark.Node) => {
     const headings: Array<string> = [];
+
     collect_children(root).forEach((x) => {
         if (x.type === 'heading' && x?.firstChild?.literal != null) {
             headings.push(x.firstChild.literal);
@@ -359,16 +323,16 @@ const Index: FC = observer(() => {
     const titles = headings.map((heading, i) => (
         <li key={i}>
             <a className="IndexLink" href={`#${to_id(heading)}`}>
-                <div style={{ padding: '0.2rem 0' }}>{heading}</div>
+                <div className="indexLinkDiv">{heading}</div>
             </a>
         </li>
     ));
 
     return (
-        <div style={{ padding: '1rem' }}>
-            <div style={{ position: 'sticky', top: '4rem', paddingTop: '1rem' }}>
-                <div style={{ fontWeight: 'bold', paddingBottom: '1rem' }}>IN THIS ARTICLE</div>
-                <ul style={{ padding: 0, listStyleType: 'none' }}>{titles}</ul>
+        <div className="indexBox">
+            <div className="index">
+                <div className="indexTitle">IN THIS ARTICLE</div>
+                <ul className="indexList">{titles}</ul>
             </div>
         </div>
     );
@@ -392,8 +356,8 @@ export const Article: FC = observer(() => {
     }
 
     return (
-        <div style={{ display: 'grid', justifyItems: 'center' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'auto auto', gridColumnGap: '1rem' }}>
+        <div className="centerContent">
+            <div className="article">
                 <Content></Content>
                 <Index></Index>
             </div>
@@ -408,8 +372,8 @@ type NavButtonProps = {
 
 const NavButton: FC<NavButtonProps> = ({ children, href, contact }) => {
     return (
-        <div style={{ padding: '0 1rem' }}>
-            <Link id={contact ? 'Contact' : undefined} className="NavButton" to={href}>
+        <div className="navButtonDiv">
+            <Link id={contact ? 'Contact' : undefined} className="navButton" to={href}>
                 {children}
             </Link>
         </div>
@@ -418,41 +382,14 @@ const NavButton: FC<NavButtonProps> = ({ children, href, contact }) => {
 
 const Header: FC = observer(() => {
     return (
-        <div
-            style={{
-                top: 0,
-                position: 'sticky',
-                alignSelf: 'start',
-                padding: '0.5rem 5%',
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: '30px',
-                backgroundColor: '#ffffff',
-                borderBottom: 'solid 1px gainsboro',
-                marginBottom: '2rem',
-            }}
-        >
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'start',
-                    alignItems: 'center',
-                    fontFamily: 'Cinzel',
-                    fontSize: '2rem',
-                }}
-            >
+        <div className="header">
+            <div className="brandingDiv">
                 <a className="Branding" href="/">
                     David E Varela
                 </a>
             </div>
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'end',
-                    alignItems: 'center',
-                }}
-            >
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', color: 'gray' }}>
+            <div className="headerNavBarBox">
+                <div className="headerNavBar">
                     <NavButton contact={false} href="/articles">
                         ARTICLES
                     </NavButton>
@@ -479,7 +416,7 @@ type LinkWidgetProps = {
 
 const LinkWidget: FC<LinkWidgetProps> = ({ children, href, title, dims }) => {
     return (
-        <div style={{ height: '2rem', width: '2rem', margin: '0 0.5rem' }}>
+        <div className="LinkWidget">
             <a href={href} title={title} className="LinkWidget">
                 <svg
                     data-icon={title}
@@ -498,26 +435,8 @@ const LinkWidget: FC<LinkWidgetProps> = ({ children, href, title, dims }) => {
 
 const Footer: FC = () => {
     return (
-        <div
-            style={{
-                display: 'grid',
-                gridTemplateAreas: `". links copyright"`,
-                gridTemplateColumns: '1fr 1fr 1fr',
-                gridTemplateRows: '1fr',
-                padding: '1rem 2rem',
-                color: '#222222',
-                backgroundColor: '#eeeeee',
-            }}
-        >
-            <div
-                style={{
-                    gridArea: 'links',
-                    alignSelf: 'center',
-                    display: 'flex',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                }}
-            >
+        <div className="Footer">
+            <div className="FooterLinks">
                 <LinkWidget href="https://github.com/00vareladavid" title="GitHub">
                     <path d="M0 18 C0 12 3 10 3 9 C2.5 7 2.5 4 3 3 C6 3 9 5 10 6 C12 5 14 5 16 5 C18 5 20 5 22 6 C23 5 26 3 29 3 C29.5 4 29.5 7 29 9 C29 10 32 12 32 18 C32 25 30 30 16 30 C2 30 0 25 0 18 M3 20 C3 24 4 28 16 28 C28 28 29 24 29 20 C29 16 28 14 16 14 C4 14 3 16 3 20 M8 21 A1.5 2.5 0 0 0 13 21 A1.5 2.5 0 0 0 8 21 M24 21 A1.5 2.5 0 0 0 19 21 A1.5 2.5 0 0 0 24 21 z"></path>
                 </LinkWidget>
@@ -531,27 +450,17 @@ const Footer: FC = () => {
                     <path d="M290.7 311L95 269.7 86.8 309l195.7 41zm51-87L188.2 95.7l-25.5 30.8 153.5 128.3zm-31.2 39.7L129.2 179l-16.7 36.5L293.7 300zM262 32l-32 24 119.3 160.3 32-24zm20.5 328h-200v39.7h200zm39.7 80H42.7V320h-40v160h359.5V320h-40z"></path>
                 </LinkWidget>
             </div>
-            <div style={{ gridArea: 'copyright', display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
-                © 2022 David E Varela. All rights reserved.
-            </div>
+            <div className="copyright">© 2022 David E Varela. All rights reserved.</div>
         </div>
     );
 };
 
 const HeaderAndFooter: FC = ({ children }) => {
     return (
-        <div
-            style={{
-                display: 'grid',
-                gridTemplateRows: 'min-content auto min-content',
-                alignItems: 'start',
-                rowGap: '2rem',
-                minHeight: '100vh',
-            }}
-        >
-            <Header></Header>
+        <div className="HeaderAndFooter">
+            <Header />
             {children}
-            <Footer></Footer>
+            <Footer />
         </div>
     );
 };
@@ -559,32 +468,22 @@ const HeaderAndFooter: FC = ({ children }) => {
 export const Landing: FC = () => {
     return (
         <HeaderAndFooter>
-            <div
-                style={{
-                    display: 'grid',
-                    justifyContent: 'center',
-                }}
-            >
-                <div style={{ maxWidth: MAX_CONTENT_WIDTH }}>This is the landing page.</div>
+            <div className="centerContent">
+                <div className="landing">This is the landing page.</div>
             </div>
         </HeaderAndFooter>
     );
 };
 
 const Block: FC = ({ children }) => {
-    return <p style={{ marginBottom: '1rem' }}>{children}</p>;
+    return <p className="block">{children}</p>;
 };
 
 export const About: FC = () => {
     return (
         <HeaderAndFooter>
-            <div
-                style={{
-                    display: 'grid',
-                    justifyContent: 'center',
-                }}
-            >
-                <div style={{ maxWidth: MAX_CONTENT_WIDTH }}>
+            <div className="centerContent">
+                <div className="about">
                     <Heading> About </Heading>
                     <Block>
                         I&apos;m David Varela, a web consultant based in San Jose, CA. I help businesses connect with
@@ -614,13 +513,8 @@ export const About: FC = () => {
 export const Portfolio: FC = () => {
     return (
         <HeaderAndFooter>
-            <div
-                style={{
-                    display: 'grid',
-                    justifyContent: 'center',
-                }}
-            >
-                <div style={{ maxWidth: MAX_CONTENT_WIDTH }}>
+            <div className="centerContent">
+                <div className="portfolio">
                     <p>This is the portfolio.</p>
                 </div>
             </div>
@@ -631,13 +525,8 @@ export const Portfolio: FC = () => {
 export const Contact: FC = () => {
     return (
         <HeaderAndFooter>
-            <div
-                style={{
-                    display: 'grid',
-                    justifyContent: 'center',
-                }}
-            >
-                <div style={{ maxWidth: MAX_CONTENT_WIDTH }}>
+            <div className="centerContent">
+                <div className="contact">
                     <p>
                         Ready to level up your web identity? Not sure where to start? Shoot me an email and let&apos;s
                         get started on building a brighter future for your business.
@@ -662,15 +551,17 @@ type BlogIndexLinkProps = {
     title: string;
     href: string;
     date: string;
+    image: string;
 };
 
-const BlogIndexLink: FC<BlogIndexLinkProps> = ({ title, href, date }) => {
+const BlogIndexLink: FC<BlogIndexLinkProps> = ({ title, href, date, image }) => {
     return (
         <li>
             <Link className="BlogIndexLink" to={href}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '10rem' }}>
-                    <span style={{ fontSize: '1.5rem' }}>{title}</span>
-                    <span style={{ fontSize: '1rem', color: DATE_COLOR }}>{date}</span>
+                <div className="BlogIndexLinkDiv">
+                    <img src={image} className="BlogIndexLinkImage"></img>
+                    <span className="BlogIndexLinkTitle">{title}</span>
+                    <span className="BlogIndexLinkDate">{date}</span>
                 </div>
             </Link>
         </li>
@@ -685,29 +576,21 @@ const BlogIndexMain: FC = () => {
     }
 
     return (
-        <div
-            style={{
-                display: 'grid',
-                justifyContent: 'center',
-            }}
-        >
-            <h1
-                style={{
-                    marginBottom: '2rem',
-                    display: 'flex',
-                    fontFamily: 'Hind',
-                    fontSize: '2rem',
-                    fontWeight: '500',
-                    justifyContent: 'center',
-                }}
-            >
-                Articles
-            </h1>
-            <ul style={{ padding: '0', listStyle: 'none' }}>
-                {posts.map((post, i) => (
-                    <BlogIndexLink key={i} title={post.title} date={post.date} href={`/articles/${i}`} />
-                ))}
-            </ul>
+        <div className="centerContent">
+            <div className="BlogIndexMain">
+                <h1 className="BlogIndexMainHeader">Articles</h1>
+                <ul className="BlogIndexList">
+                    {posts.map((post, i) => (
+                        <BlogIndexLink
+                            key={i}
+                            title={post.title}
+                            date={post.date}
+                            image={post.image}
+                            href={`/articles/${i}`}
+                        />
+                    ))}
+                </ul>
+            </div>
         </div>
     );
 };
@@ -720,7 +603,7 @@ const ARTICLES = [
         image: contrast,
     },
     {
-        title: 'Julia Pkg Tutorial',
+        title: 'An Introduction to Julia Pkg',
         date: 'January 10, 2021',
         url: 'pkg_tutorial.md',
         image: dunes,
