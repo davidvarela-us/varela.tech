@@ -3,7 +3,7 @@
     --larger: 1.618rem;
     --base: 1rem;
     --smaller: 0.618rem;
-    --max-content-width: 786px;
+    --max-content-width: 40rem;
     --color-brand: #0B0033;
     --color-darkest: #444444;
     --color-darker: #666666;
@@ -114,6 +114,7 @@ a.BlogIndexLink {
     padding: var(--base);
     margin: var(--base) 0;
     border: solid 1px #dddddd;
+    overflow: auto;
 }
 
 .strong {
@@ -145,8 +146,6 @@ a.BlogIndexLink {
     display: flex;
     justify-content: space-between;
     font-size: 30px;
-    background-color: white;
-    margin-bottom: var(--largest);
 }
 
 .headerNavBar {
@@ -264,6 +263,7 @@ div.LinkWidget {
     font-family: Hind;
     font-size: var(--larger);
     font-weight: 500;
+    margin-bottom: var(--larger);
 }
 
 .BlogIndexList {
@@ -296,10 +296,6 @@ div.LinkWidget {
 }
 
 @media screen and (max-width: 640px) {
-    html {
-        font-size: 16px;
-    }
-
     .header {
         width: 100%;
         position: relative;
@@ -308,8 +304,7 @@ div.LinkWidget {
         align-items: flex-start;
         gap: var(--smaller);
         padding: var(--base) var(--smaller);
-        margin-bottom: var(--largest);
-        background-color: var(--color-brand);
+        margin-bottom: var(--larger);
     }
 
     .headerNavBar {
@@ -324,20 +319,19 @@ div.LinkWidget {
     }
 
     a.Branding {
-        color: white;
+        color: var(--color-brand);
         font-size: var(--larger);
     }
 
     a.navButton {
         font-size: var(--base);
-        color: gainsboro;
     }
 
     a.navButton#Contact {
-        color: gainsboro;
         padding: 0;
         border-radius: 0;
         background-color: transparent;
+        color: var(--color-darker)
     }
 
     .Footer {
@@ -356,9 +350,11 @@ div.LinkWidget {
 
     .HeaderAndFooter {
         row-gap: 0;
+        width: 100vw;
     }
 
     .article {
+        width: 100vw;
         display: grid;
         grid-template-areas:
             "index"
@@ -368,6 +364,7 @@ div.LinkWidget {
     }
 
     .content {
+        width: 100vw;
         grid-area: content;
         /* restrict max paragraph length */
         max-width: auto;
@@ -397,6 +394,7 @@ div.LinkWidget {
     }
 
     .BlogIndexMain {
+        width: 100%;
         display: flex;
         flex-direction: column;
         justify-content: start;

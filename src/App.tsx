@@ -491,8 +491,8 @@ export const About: FC = () => {
                     </Block>
                     <Heading>My Philosophy</Heading>
                     <Block>
-                        My philosophy is founded in relentless refinement. I believed that sustained focus and effort,
-                        more than anything else, has the power to shape the world.
+                        My philosophy is founded in relentless refinement. I believe that sustained focus and effort has
+                        the power to shape the world.
                     </Block>
                     <Heading> About Me </Heading>
                     <Block>
